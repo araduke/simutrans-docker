@@ -1,0 +1,2 @@
+59 * * * * root /app/backup-hourly.sh &>> /app/backup-hourly.log
+30 4 * * * root /app/backup-daily.sh &>> /app/backup-daily.log

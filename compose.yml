@@ -1,0 +1,106 @@
+
+services:
+
+  # 初回起動時ではセーブデータ読み込みを特別な方法で行う必要がある
+  # 読み込みたいデータを volume-save/save/first.sve に配置し、まずはこれを起動する
+  # そして、Simutransのアプリを自身の端末で起動し、一度サーバーに接続する(これにより適切な初期設定が行われる)
+  first:
+    build:
+      context: server
+      dockerfile: Dockerfile.general
+    restart: "no"
+    ports:
+      - "13353:13353"
+    volumes:
+      - ./volume-bin:/app/bin
+      - ./volume-save:/root/simutrans
+    command:
+      /app/bin/simutrans-extended
+        -objects Pak128.Britain-Ex
+        -server 13353
+        -debug 2
+        -server_admin_pw ${NETTOOL_PASSWORD}
+        -load first.sve
+
+  # 通常の実行環境
+  # GUIを動かすために必要なライブラリが全て入っている
+  # ただし、GUIに接続することはできない
+  server-general:
+    build:
+      context: server
+      dockerfile: Dockerfile.general
+    restart: unless-stopped
+    ports:
+      - "13353:13353"
+    volumes:
+      - ./volume-bin:/app/bin
+      - ./volume-save:/root/simutrans
+    command:
+      /app/bin/simutrans-extended
+        -objects Pak128.Britain-Ex
+        -server 13353
+        -debug 2
+        -server_admin_pw ${NETTOOL_PASSWORD}
+
+  # headlessビルド用の実行環境(GUIの描画がないため負荷が少ない)
+  # https://bridgewater-brunel.me.uk/downloads/nightly/linux-x64/command-line-server-build/
+  # からダウンロードし、headless-serverという名前でvolume-binに配置しておくこと
+  server-headless:
+    build:
+      context: server
+      dockerfile: Dockerfile.headless
+    restart: unless-stopped
+    ports:
+      - "13353:13353"
+    volumes:
+      - ./volume-bin:/app/bin
+      - ./volume-save:/root/simutrans
+    # headlessサーバーはGUIを持たないため、クライアントの環境より高速に動作する
+    # 高い負荷がかかりクライアント側の処理が遅延すると、クライアント側の時刻が遅れ、操作の反映が数十秒遅れプレイ不可能になってしまう
+    deploy:
+      resources:
+        limits:
+          cpus: "0.7" # いい感じに調整すること
+    command:
+      /app/bin/headless-server
+        -objects Pak128.Britain-Ex
+        -server 13353
+        -debug 2
+        -server_admin_pw ${NETTOOL_PASSWORD}
+
+  # vncでGUIに接続できる実行環境
+  # プロセス終了時に自動で復帰する機構付き
+  server-vnc:
+    build:
+      context: server
+      dockerfile: Dockerfile.vnc
+    restart: unless-stopped
+    ports:
+      - "13353:13353"   # simutrans-extendedのポート
+      - "5900:5900"     # VNCのポート
+    volumes:
+      - ./volume-bin:/app/bin
+      - ./volume-save:/root/simutrans
+    environment:
+      - COMMAND=/app/bin/simutrans-extended
+        -objects Pak128.Britain-Ex
+        -server 13353
+        -fullscreen
+        -debug 2
+        -server_admin_pw ${NETTOOL_PASSWORD}
+    command: /app/start-vnc.sh
+
+  # オートセーブ・バックアップ用コンテナ
+  backup:
+    build:
+      context: backup
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./volume-nettool:/app/nettool
+      - ./volume-save:/app/save
+    environment:
+      - TZ=Asia/Tokyo
+      - NETTOOL_PASSWORD=${NETTOOL_PASSWORD}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

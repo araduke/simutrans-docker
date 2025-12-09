@@ -1,0 +1,33 @@
+
+# ベースイメージ
+FROM debian:trixie-slim
+
+# VNC関連のパッケージをインストール
+RUN apt-get update && \
+    apt-get install -y tzdata dbus xvfb x11vnc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# VNCのパスワードを設定
+# VNCのポートは外部に公開しない想定なので、簡易的なパスワードにしています
+RUN mkdir -p /root/.vnc && \
+    x11vnc -storepasswd password /root/.vnc/passwd
+
+# DISPLAY環境変数の設定
+ENV DISPLAY=:99
+
+# Simutransに必要なパッケージのインストール
+RUN apt-get update && \
+    apt-get install -y autoconf build-essential curl libbz2-dev libpng-dev libz-dev subversion unzip sed wget miniupnpc libsdl2-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# libminiupnpc.17が必要なので、誤魔化す
+RUN ln -s /usr/lib/x86_64-linux-gnu/libminiupnpc.so.18 /usr/lib/x86_64-linux-gnu/libminiupnpc.so.17 && \
+    ldconfig
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+COPY start-vnc.sh /app/start-vnc.sh
+# 実行ファイルなどはホストから/app/binにマウントする想定
