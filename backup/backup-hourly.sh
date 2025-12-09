@@ -2,6 +2,11 @@
 
 cd $(dirname $0)
 
+# compose の環境変数を読み込む
+. /etc/container.env
+
+echo "Password is: $NETTOOL_PASSWORD"
+
 NETTOOL="/app/nettool/nettool -s host.docker.internal -p $NETTOOL_PASSWORD"
 
 echo "say 60秒後に定期セーブを行います。"
