@@ -130,6 +130,6 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/libminiupnpc.so.18 /usr/lib/x86_64-linux-gnu
 - [How to set-up (or compile) a Linux headless Simutrans server?](https://forum.simutrans.com/index.php?topic=23231.0)
   - Standard版などでGUI無しのバイナリをコンパイルする方法が解説されています。
 
-## その他
+## 謝辞
 
 本日の11時に、私を一番近くで育ててくれた祖母が長い眠りにつきました。祖母に感謝を込めてこの記事を捧げます。
