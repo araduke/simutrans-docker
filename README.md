@@ -1,15 +1,23 @@
 
 # Dockerを使ったSimutrans-Extendedサーバーのセットアップ
 
-(あくまでSimutrans-Extended向けに作成していますが、修正を加えればStandard版やOTRP版でも動作すると思います)
+この記事(?)は[Simutrans Advent Calendar 2025 - Adventar](https://adventar.org/calendars/11306)の18日目の記事です。
+
+## 作ったもの
+
+Simutrans-ExtendedのマルチプレイサーバーをDockerを使って簡単に構築できるようにするための設定ファイル群です。
 
 - command-line-server-build(GUI無し)バージョンのSimutrans-Extendedに対応
 - オートセーブ・毎時/毎日セーブに対応
   - 毎時セーブは直近24時間分、毎日セーブは無制限に保存されます
 
+(あくまでSimutrans-Extended向けに作成していますが、修正を加えればStandard版やOTRP版でも動作すると思います)
+
+この設定ファイル群は[ななさば1期](https://ob.sou7.io/simutrans/%E3%81%AA%E3%81%AA%E3%81%95%E3%81%B0/%E3%81%AA%E3%81%AA%E3%81%95%E3%81%B01%E6%9C%9F/%E3%81%AA%E3%81%AA%E3%81%95%E3%81%B01%E6%9C%9F)で使用していた設定をベースにしています。
+
 ## 0. 事前にインストールが必要なもの
 
-以下のソフトウェアがインストールされている必要があります。OSはLinux系を想定しています。WindowsやMacで動くかは未確認です。
+以下のソフトウェアがインストールされている必要があります。OSはLinuxを想定しています。WindowsやMacで動くかは未確認です。
 
 1. Docker
 2. Docker Compose
@@ -30,7 +38,7 @@
 8. `simuconf.tab`の設定の`singleuser_install`が0になっていることを確認して下さい。
     - ダウンロードしてそのままの場合は0になっていますが、他の場所からコピーしてきた場合は1になっている可能性があります。0に変更して下さい。
 
-最新のNightlyバージョンではなく、事前に用意した特定のバージョンを使いたい場合は適宜4.の手順を変更して下さい。なお、nettoolはほとんど変わらないので最新版を使って問題ありません。
+最新のNightlyバージョンではなく、事前に用意した特定のバージョンを使いたい場合は適宜4.の手順を変更して下さい。なお、nettoolはどのバージョンでもほとんど変わらないので、最新版を使っても問題ありません。
 
 Simutrans-Extendedには安定版が存在しません。そのため、Nightlyビルドを頻繁に更新することは避けた方が良いでしょう。大きな変更が取り込まれてしばらくの間はNightlyビルドが不安定になることがあります。
 
@@ -38,7 +46,7 @@ Simutrans-Extendedには安定版が存在しません。そのため、Nightly�
 
 セーブデータをあらかじめ生成しておく必要があります。同じ本体を使ってセーブデータを生成した場合は2.aを、異なるバージョンの本体を使ってセーブデータを生成した場合は2.bを参照して下さい。
 
-ちなみに、サーバーに接続したときのクライアント側のマップ位置はセーブデータを生成したときのセーブ位置になります。
+ちなみに、サーバーに接続したときのクライアント側のマップ位置は、セーブデータを生成したときのセーブ位置になります。
 
 ### 2.a まったく同じバージョンのデータを持ってくる場合
 
@@ -103,7 +111,7 @@ GUI無し版でサーバーを立てると、クライアントの処理が置�
 
 ### Rootless Dockerで動かしたい
 
-`backup/backup-hourly.sh`で`host.docker.internal`を使っている部分を、使用するサービス名に変更し、`docker-compose.yml`の`backup`セクションの`extra_hosts`を削除して下さい。
+`backup/backup-hourly.sh`で`host.docker.internal`を使っている部分を使用するサービス名に変更し、`docker-compose.yml`の`backup`セクションの`extra_hosts`を削除して下さい。
 
 ### libminiupnpc.17について
 
@@ -121,3 +129,7 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/libminiupnpc.so.18 /usr/lib/x86_64-linux-gnu
   - OTRPバージョンでGUI込みでのサーバー構築方法が解説されています。
 - [How to set-up (or compile) a Linux headless Simutrans server?](https://forum.simutrans.com/index.php?topic=23231.0)
   - Standard版などでGUI無しのバイナリをコンパイルする方法が解説されています。
+
+## その他
+
+本日の11時に、私を一番近くで育ててくれた祖母が長い眠りにつきました。祖母に感謝を込めてこの記事を捧げます。

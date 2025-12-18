@@ -4,7 +4,7 @@ FROM debian:trixie-slim
 
 # VNC関連のパッケージをインストール
 RUN apt-get update && \
-    apt-get install -y tzdata dbus xvfb x11vnc && \
+    apt-get install -y --no-install-recommends tzdata dbus xvfb x11vnc && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -18,7 +18,7 @@ ENV DISPLAY=:99
 
 # Simutransに必要なパッケージのインストール
 RUN apt-get update && \
-    apt-get install -y autoconf build-essential curl libbz2-dev libpng-dev libz-dev subversion unzip sed wget miniupnpc libsdl2-dev && \
+    apt-get install -y --no-install-recommends autoconf build-essential curl libbz2-dev libpng-dev libz-dev subversion unzip sed wget miniupnpc libsdl2-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
