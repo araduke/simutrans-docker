@@ -10,7 +10,7 @@ services:
       dockerfile: Dockerfile.general
     restart: "no"
     ports:
-      - "13353:13353"
+      - "${PORT}:13353"
     volumes:
       - ./volume-bin:/app/bin
       - ./volume-save:/root/simutrans
@@ -21,6 +21,10 @@ services:
         -debug 2
         -server_admin_pw ${NETTOOL_PASSWORD}
         -load first.sve
+    networks:
+      default:
+        aliases:
+          - server
 
   # 通常の実行環境
   # GUIを動かすために必要なライブラリが全て入っている
@@ -31,7 +35,7 @@ services:
       dockerfile: Dockerfile.general
     restart: unless-stopped
     ports:
-      - "13353:13353"
+      - "${PORT}:13353"
     volumes:
       - ./volume-bin:/app/bin
       - ./volume-save:/root/simutrans
@@ -41,6 +45,10 @@ services:
         -server 13353
         -debug 2
         -server_admin_pw ${NETTOOL_PASSWORD}
+    networks:
+      default:
+        aliases:
+          - server
 
   # headlessビルド用の実行環境(GUIの描画がないため負荷が少ない)
   # https://bridgewater-brunel.me.uk/downloads/nightly/linux-x64/command-line-server-build/
@@ -53,7 +61,7 @@ services:
         - SIMUTRANS_VERSION=${SIMUTRANS_VERSION}
     restart: unless-stopped
     ports:
-      - "13353:13353"
+      - "${PORT}:13353"
     volumes:
       - ./volume-bin/pak:/app/bin/pak
       - ./volume-save:/root/simutrans
@@ -64,6 +72,10 @@ services:
         -debug 2
         -server_admin_pw ${NETTOOL_PASSWORD}
         -load ../server13353-network.sve
+    networks:
+      default:
+        aliases:
+          - server
   # vncでGUIに接続できる実行環境
   # プロセス終了時に自動で復帰する機構付き
   server-vnc:
@@ -72,7 +84,7 @@ services:
       dockerfile: Dockerfile.vnc
     restart: unless-stopped
     ports:
-      - "13353:13353"   # simutrans-extendedのポート
+      - "${PORT}:13353"   # simutrans-extendedのポート
       - "5900:5900"     # VNCのポート
     volumes:
       - ./volume-bin:/app/bin
@@ -85,18 +97,21 @@ services:
         -debug 2
         -server_admin_pw ${NETTOOL_PASSWORD}
     command: /app/start-vnc.sh
+    networks:
+      default:
+        aliases:
+          - server
 
   # オートセーブ・バックアップ用コンテナ
   backup:
     build:
       context: backup
       dockerfile: Dockerfile
+      args:
+        - SIMUTRANS_VERSION=${SIMUTRANS_VERSION}
     restart: unless-stopped
     volumes:
-      - ./volume-nettool:/app/nettool
       - ./volume-save:/app/save
     environment:
       - TZ=Asia/Tokyo
       - NETTOOL_PASSWORD=${NETTOOL_PASSWORD}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
