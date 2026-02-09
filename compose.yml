@@ -49,25 +49,21 @@ services:
     build:
       context: server
       dockerfile: Dockerfile.headless
+      args:
+        - SIMUTRANS_VERSION=${SIMUTRANS_VERSION}
     restart: unless-stopped
     ports:
       - "13353:13353"
     volumes:
-      - ./volume-bin:/app/bin
+      - ./volume-bin/pak:/app/bin/pak
       - ./volume-save:/root/simutrans
-    # headlessサーバーはGUIを持たないため、クライアントの環境より高速に動作する
-    # 高い負荷がかかりクライアント側の処理が遅延すると、クライアント側の時刻が遅れ、操作の反映が数十秒遅れプレイ不可能になってしまう
-    deploy:
-      resources:
-        limits:
-          cpus: "0.7" # いい感じに調整すること
     command:
       /app/bin/headless-server
-        -objects Pak128.Britain-Ex
+        -objects pak
         -server 13353
         -debug 2
         -server_admin_pw ${NETTOOL_PASSWORD}
-
+        -load ../server13353-network.sve
   # vncでGUIに接続できる実行環境
   # プロセス終了時に自動で復帰する機構付き
   server-vnc:

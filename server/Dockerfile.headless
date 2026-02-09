@@ -1,9 +1,28 @@
 # ベースイメージ
+FROM debian:trixie-slim AS build
+
+ARG SIMUTRANS_VERSION
+
+# 必要なパッケージのインストール。ca-certificatesはwget、curlは./get_lang_files.shの実行のために必要となる
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget unzip autoconf make gcc g++ zlib1g-dev libbz2-dev libpng-dev ca-certificates curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp
+RUN wget "https://github.com/teamhimeh/simutrans/archive/refs/tags/${SIMUTRANS_VERSION}.zip" && \
+    unzip "${SIMUTRANS_VERSION}.zip"
+
+WORKDIR "/tmp/simutrans-${SIMUTRANS_VERSION#v}"
+RUN autoupdate && autoconf && ./configure && make
+RUN ./get_lang_files.sh
+
 FROM debian:trixie-slim
 
-# 必要なパッケージのインストール
+ARG SIMUTRANS_VERSION
+
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libminiupnpc-dev libpng-dev && \
+    apt-get install -y --no-install-recommends libpng-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -12,6 +31,11 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/libminiupnpc.so.18 /usr/lib/x86_64-linux-gnu
     ldconfig
 
 # 作業ディレクトリの設定
-WORKDIR /app
+WORKDIR /app/bin
 
-# 実行ファイルなどはホストから/app/binにマウントする想定
+# build（Stage 1）から必要な成果物だけをピンポイントでコピー
+COPY --from=build /tmp/simutrans-${SIMUTRANS_VERSION#v}/sim ./headless-server
+COPY --from=build /tmp/simutrans-${SIMUTRANS_VERSION#v}/simutrans/text ./text
+COPY --from=build /tmp/simutrans-${SIMUTRANS_VERSION#v}/simutrans/font ./font
+COPY --from=build /tmp/simutrans-${SIMUTRANS_VERSION#v}/simutrans/themes ./themes
+COPY --from=build /tmp/simutrans-${SIMUTRANS_VERSION#v}/simutrans/script ./script
